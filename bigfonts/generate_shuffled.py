@@ -1,6 +1,6 @@
 import h5py
 import numpy as np
-data = h5py.File('fonts.hdf5')
+data = h5py.File('fonts.hdf5', 'r')
 X = data['fonts']
 f = h5py.File("data_shuffled.hdf5", "w")
 ind = np.arange(X.shape[0] * X.shape[1])
