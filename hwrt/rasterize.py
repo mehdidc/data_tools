@@ -61,25 +61,34 @@ def to_image(points, w=32, h=32, x_max=None, y_max=None, tickness=1, pad=8):
 @click.option('--tickness', default=1, required=False)
 @click.option('--most_common_classes', default=0, required=False)
 @click.option('--out', default='data.npz', required=False)
-def rasterize(w, h, pad, impad, tickness, most_common_classes, out):
+@click.option('--nbpoints', default=-1, required=False)
+@click.option('--shuffle', default=False, required=False)
+def rasterize(w, h, pad, impad, tickness, most_common_classes, out, nbpoints, shuffle):
     mapping = get_symbol_mapping()
     
     fd = open('train-data.csv')
     lines = fd.readlines()[1:]
-    
     fd = open('test-data.csv')
     lines += fd.readlines()[1:]
 
     lines = map(parse_line, lines)
-    lines = filter(lambda l:l['user_id']==16925, lines)
+    lines = list(filter(lambda l:l['user_id']==16925, lines))
+
+    if shuffle:
+        np.random.seed(42)
+        np.random.shuffle(lines)
+
+
+    if nbpoints > 0:
+        lines = lines[0:nbpoints]
 
     y_str = [mapping[l['symbol_id']] for l in lines]
     y_str = np.array(y_str)
     y = [l['symbol_id'] for l in lines]
     y = np.array(y)
         
-    points = map(points_from_line, lines)
-    X = map(partial(to_image, w=w, h=h, tickness=tickness, pad=pad), points)
+    points = list(map(points_from_line, lines))
+    X = list(map(partial(to_image, w=w, h=h, tickness=tickness, pad=pad), points))
     for i in range(len(X)):
         if impad>0:
             X[i] = np.pad(X[i], impad, 'constant')
@@ -93,7 +102,7 @@ def rasterize(w, h, pad, impad, tickness, most_common_classes, out):
         filtered_classes = set(all_classes) - set(common_classes)
         for y_id in filtered_classes:
             mask[y==y_id] = False
-    low_constrast_mask = map(lambda i:is_low_contrast(X[i]), np.arange(len(X)))
+    low_constrast_mask = list(map(lambda i:is_low_contrast(X[i]), np.arange(len(X))))
     low_constrast_mask = np.array(low_constrast_mask, dtype=np.bool) 
     mask = mask & (~low_constrast_mask)
 
@@ -103,6 +112,7 @@ def rasterize(w, h, pad, impad, tickness, most_common_classes, out):
     y_str = y_str[mask]
     y = LabelEncoder().fit_transform(y)
     i = 0
+    print(X.shape)
     X = X[:, None, :, :]
     np.savez(out, X=X, y=y, y_str=y_str)
 

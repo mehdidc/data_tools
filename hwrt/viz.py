@@ -1,7 +1,7 @@
 from skimage.io import imsave
 import numpy as np
 from machinedesign.viz import grid_of_images_default
-data = np.load('data.npz')
+data = np.load('data_padded.npz')
 X = data['X']
 y = data['y']
 np.random.shuffle(X)

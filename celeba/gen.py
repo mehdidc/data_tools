@@ -9,10 +9,12 @@ fd.readline()
 
 X = []
 y = []
-for i in range(1, 83812):
+for i in range(1, 100001):
+    if i % 1000 == 0: 
+        print(i)
     filename = 'img_align_celeba_png/{:06d}.png'.format(i)
     img = imread(filename)
-    img = resize(img, (64, 64))
+    img = resize(img, (64, 64), preserve_range=True)
     img = img.transpose((2, 0, 1))
     X.append(img)
 
@@ -23,7 +25,9 @@ for i in range(1, 83812):
     line = filter(lambda l:l!='', line)
     line = list(line)
     line = list(map(int, line))
+    line = [l if l == 1 else 0 for l in line]
     y.append(line)
+    
 
 X = np.array(X)
 y = np.array(y)
